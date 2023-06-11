@@ -38,7 +38,7 @@ export function jsx(
 			continue;
 		}
 		if (Object.hasOwnProperty.call(config, prop)) {
-			props[prop] = config[props];
+			props[prop] = config[prop];
 		}
 	}
 
@@ -52,4 +52,24 @@ export function jsx(
 	return ReactElement(type, key, ref, props);
 }
 
-export const jsxDEV = jsx;
+export function jsxDEV(type: Type, config: Props): ReactElementType {
+	let key: Key = null;
+	let ref: Ref = null;
+	const props: Props = {};
+
+	for (const prop in config) {
+		if (prop === 'key' && config[prop] !== undefined) {
+			key = config[prop];
+			continue;
+		}
+		if (prop === 'ref' && config[prop] !== undefined) {
+			ref = config[prop];
+			continue;
+		}
+		if (Object.hasOwnProperty.call(config, prop)) {
+			props[prop] = config[prop];
+		}
+	}
+
+	return ReactElement(type, key, ref, props);
+}
