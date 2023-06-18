@@ -1,4 +1,4 @@
-import { Action, ReactElementType } from 'shared/ReactTypes';
+import { ReactElementType } from 'shared/ReactTypes';
 import type { FiberNode } from './fiber';
 import { UpdateQueue, processUpdateQueue } from './updateQueue';
 import { HostComponent, HostRoot, HostText } from './workTags';
@@ -17,6 +17,7 @@ export function beginWork(workInProgress: FiberNode) {
 			if (__DEV__) {
 				console.log('未实现的beginWork类型', workInProgress);
 			}
+			break;
 	}
 	return null;
 }
@@ -32,8 +33,8 @@ function updateHostRoot(workInProgress: FiberNode) {
 	const pedding = updateQueue.shared.pedding;
 	updateQueue.shared.pedding = null;
 	const { memoizedState } = processUpdateQueue(baseState, pedding);
-
 	workInProgress.memoizedState = memoizedState;
+
 	const nextChildren = workInProgress.memoizedState;
 	reconcileChildren(workInProgress, nextChildren);
 	return workInProgress.child;
@@ -44,7 +45,7 @@ function updateHostRoot(workInProgress: FiberNode) {
 */
 function updateHostComponent(workInProgress: FiberNode) {
 	const nextProps = workInProgress.peddingProps;
-	const nextChildren = nextProps.chidlren;
+	const nextChildren = nextProps.children;
 	reconcileChildren(workInProgress, nextChildren);
 	return workInProgress.child;
 }
@@ -54,15 +55,14 @@ function reconcileChildren(
 	children: ReactElementType
 ) {
 	const current = workInProgress.alternate;
-
 	// 对应mount
-	if (current === null) {
-		workInProgress.child = mountChildFibers(workInProgress, null, children);
-	} else {
+	if (current !== null) {
 		workInProgress.child = reconcileChildFibers(
 			workInProgress,
 			current.child,
 			children
 		);
+	} else {
+		workInProgress.child = mountChildFibers(workInProgress, null, children);
 	}
 }

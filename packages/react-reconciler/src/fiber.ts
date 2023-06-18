@@ -111,7 +111,7 @@ export function createFiberFromElement(element: ReactElementType) {
 		}
 	}
 
-	const fiber = new FiberNode(fiberTag, key, props);
+	const fiber = new FiberNode(fiberTag, props, key);
 
 	fiber.type = type;
 

@@ -11,14 +11,13 @@ import { Flags, NoFlags } from './fiberFlags';
 export function completeWork(workInProgress: FiberNode) {
 	const newProps = workInProgress.peddingProps;
 	const current = workInProgress.alternate;
-
 	switch (workInProgress.tag) {
 		case HostComponent:
 			if (current !== null && workInProgress.stateNode) {
 				// update
 			} else {
 				// mount
-				const instance = createInstance(workInProgress.tag, newProps);
+				const instance = createInstance(workInProgress.type, newProps);
 				appendAllChildren(instance, workInProgress);
 				workInProgress.stateNode = instance;
 			}
@@ -31,10 +30,7 @@ export function completeWork(workInProgress: FiberNode) {
 				// update
 			} else {
 				// mount
-				const instance = createTextInstance(
-					workInProgress.tag,
-					newProps.content
-				);
+				const instance = createTextInstance(newProps.content);
 				workInProgress.stateNode = instance;
 			}
 			bubbleProperties(workInProgress);
@@ -43,6 +39,7 @@ export function completeWork(workInProgress: FiberNode) {
 			if (__DEV__) {
 				console.log('completeWork中为实现的tag');
 			}
+			break;
 	}
 
 	return null;
@@ -53,7 +50,7 @@ function appendAllChildren(parent: Container, workInProgress: FiberNode) {
 
 	while (node !== null) {
 		if (node.tag === HostComponent || node.tag === HostRoot) {
-			appendInintialChild(parent, workInProgress.stateNode);
+			appendInintialChild(parent, node.stateNode);
 		} else if (node.child !== null) {
 			node.child.return = node;
 			node = node.child;

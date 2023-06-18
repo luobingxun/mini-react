@@ -23,7 +23,8 @@ export const getPckJson = (pckName) => {
 
 export const getBasePlugins = (
 	alias = {
-		__DEV__: true
+		__DEV__: true,
+		preventAssignment: true
 	},
 	{ typescript = {} } = {}
 ) => {

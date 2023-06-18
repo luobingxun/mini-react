@@ -14,6 +14,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^17.6.5
         version: 17.6.5
+      '@rollup/plugin-alias':
+        specifier: ^5.0.0
+        version: 5.0.0(rollup@3.24.1)
       '@rollup/plugin-commonjs':
         specifier: ^25.0.1
         version: 25.0.1(rollup@3.24.1)
@@ -47,6 +50,18 @@ importers:
 
   packages/react:
     dependencies:
+      shared:
+        specifier: workspace:*
+        version: link:../shared
+
+  packages/react-dom:
+    dependencies:
+      react:
+        specifier: workspace:*
+        version: link:../react
+      react-reconciler:
+        specifier: workspace:*
+        version: link:../react-reconciler
       shared:
         specifier: workspace:*
         version: link:../shared
@@ -349,6 +364,19 @@ packages:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
+    dev: true
+
+  /@rollup/plugin-alias@5.0.0(rollup@3.24.1):
+    resolution: {integrity: sha512-l9hY5chSCjuFRPsnRm16twWBiSApl2uYFLsepQYwtBuAxNMQ/1dJqADld40P0Jkqm65GRTLy/AC6hnpVebtLsA==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      rollup: 3.24.1
+      slash: 4.0.0
     dev: true
 
   /@rollup/plugin-commonjs@25.0.1(rollup@3.24.1):
@@ -1796,6 +1824,11 @@ packages:
 
   /signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
+    dev: true
+
+  /slash@4.0.0:
+    resolution: {integrity: sha512-3dOsAHXXUkQTpOYcoAxLIorMTp4gIQr5IW3iVb7A7lFIp0VHhnynm9izx6TssdrIcVIESAlVjtnO2K8bg+Coew==}
+    engines: {node: '>=12'}
     dev: true
 
   /sort-keys@2.0.0:
