@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import ts from 'rollup-plugin-typescript2';
 import cjs from '@rollup/plugin-commonjs';
+import replace from '@rollup/plugin-replace';
 
 export const pckPath = path.resolve(__dirname, '../../packages');
 export const pckDistPath = path.resolve(__dirname, '../../dist/node_modules');
@@ -20,6 +21,11 @@ export const getPckJson = (pckName) => {
 	return JSON.parse(str);
 };
 
-export const getBasePlugins = ({ typescript = {} } = {}) => {
-	return [cjs(), ts(typescript)];
+export const getBasePlugins = (
+	alias = {
+		__DEV__: true
+	},
+	{ typescript = {} } = {}
+) => {
+	return [replace(alias), cjs(), ts(typescript)];
 };

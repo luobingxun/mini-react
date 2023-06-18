@@ -2,13 +2,12 @@ import { Container } from 'hostConfig';
 import { FiberNode, FiberRootNode } from './fiber';
 import { HostRoot } from './workTags';
 import {
-	type Update,
 	createUpdate,
 	createUpdateQueue,
 	enqueueUpdate,
 	type UpdateQueue
 } from './updateQueue';
-import type { Action, ReactElementType } from 'shared/ReactTypes';
+import type { ReactElementType } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 
 export function createContainer(container: Container) {
@@ -24,10 +23,7 @@ export function updateContainer(
 ) {
 	const current = root.current;
 	const update = createUpdate<ReactElementType>(element);
-	enqueueUpdate(
-		current.updateQueue as UpdateQueue<Action<ReactElementType>>,
-		update as Update<Action<ReactElementType>>
-	);
+	enqueueUpdate(current.updateQueue as UpdateQueue<ReactElementType>, update);
 	scheduleUpdateOnFiber(current);
 	return element;
 }

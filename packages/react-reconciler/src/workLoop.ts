@@ -39,9 +39,20 @@ export function renderRoot(root: FiberRootNode) {
 			break;
 		} catch (error) {
 			workInProgress = null;
-			throw new Error('工作循环出错了');
+			if (__DEV__) {
+				console.warn('工作循环出错了');
+			}
 		}
 	} while (true);
+
+	const finishedWord = root.current.alternate;
+	root.finishedWork = finishedWord;
+
+	conmitRoot(root);
+}
+
+function conmitRoot(root: FiberRootNode) {
+	console.log(root);
 }
 
 function workLoop() {

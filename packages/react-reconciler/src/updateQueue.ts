@@ -4,9 +4,9 @@ export interface Update<State> {
 	action: Action<State>;
 }
 
-export interface UpdateQueue<Action> {
+export interface UpdateQueue<State> {
 	shared: {
-		pedding: Update<Action> | null;
+		pedding: Update<State> | null;
 	};
 }
 
@@ -14,7 +14,7 @@ export function createUpdate<State>(action: Action<State>): Update<State> {
 	return { action };
 }
 
-export function createUpdateQueue<Action>(): UpdateQueue<Action> {
+export function createUpdateQueue<State>(): UpdateQueue<Action<State>> {
 	return {
 		shared: {
 			pedding: null
@@ -23,8 +23,8 @@ export function createUpdateQueue<Action>(): UpdateQueue<Action> {
 }
 
 export function enqueueUpdate<State>(
-	updateQueue: UpdateQueue<Action<State>>,
-	update: Update<Action<State>>
+	updateQueue: UpdateQueue<State>,
+	update: Update<State>
 ) {
 	updateQueue.shared.pedding = update;
 }
