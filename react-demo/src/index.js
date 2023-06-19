@@ -3,11 +3,7 @@ import ReactDOM from 'react-dom';
 
 const jsx = (
 	<div>
-		<div>
-			<span>
-				<p>我是p标签</p>
-			</span>
-		</div>
+		<p>我是p标签</p>
 	</div>
 );
 

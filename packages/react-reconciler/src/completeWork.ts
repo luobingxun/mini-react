@@ -24,6 +24,7 @@ export function completeWork(workInProgress: FiberNode) {
 			bubbleProperties(workInProgress);
 			return null;
 		case HostRoot:
+			bubbleProperties(workInProgress);
 			return null;
 		case HostText:
 			if (current !== null && workInProgress.stateNode) {
@@ -49,7 +50,7 @@ function appendAllChildren(parent: Container, workInProgress: FiberNode) {
 	let node: FiberNode | null = workInProgress.child;
 
 	while (node !== null) {
-		if (node.tag === HostComponent || node.tag === HostRoot) {
+		if (node.tag === HostComponent || node.tag === HostText) {
 			appendInintialChild(parent, node.stateNode);
 		} else if (node.child !== null) {
 			node.child.return = node;

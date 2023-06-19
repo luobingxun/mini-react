@@ -50,6 +50,7 @@ function ChildrenReconciler(shouldCheckFlags: boolean) {
 					if (__DEV__) {
 						console.log('未实现的ELMENT类型');
 					}
+					return null;
 			}
 		}
 

@@ -80,7 +80,7 @@ export function createWorkInProgress(current: FiberNode, peddingProps: Props) {
 
 	// 为null对应mount
 	if (workInProgress === null) {
-		workInProgress = new FiberNode(current.tag, {}, current.key);
+		workInProgress = new FiberNode(current.tag, peddingProps, current.key);
 		workInProgress.stateNode = current.stateNode;
 
 		workInProgress.alternate = current;
