@@ -1,8 +1,14 @@
 import { ReactElementType } from 'shared/ReactTypes';
 import type { FiberNode } from './fiber';
 import { UpdateQueue, processUpdateQueue } from './updateQueue';
-import { HostComponent, HostRoot, HostText } from './workTags';
+import {
+	FunctionComponent,
+	HostComponent,
+	HostRoot,
+	HostText
+} from './workTags';
 import { mountChildFibers, reconcileChildFibers } from './childFIber';
+import { renderWithHooks } from './fiberHooks';
 
 export function beginWork(workInProgress: FiberNode) {
 	switch (workInProgress.tag) {
@@ -10,6 +16,8 @@ export function beginWork(workInProgress: FiberNode) {
 			return updateHostRoot(workInProgress);
 		case HostComponent:
 			return updateHostComponent(workInProgress);
+		case FunctionComponent:
+			return updateFunctionComponent(workInProgress);
 		case HostText: {
 			return null;
 		}
@@ -40,12 +48,18 @@ function updateHostRoot(workInProgress: FiberNode) {
 	return workInProgress.child;
 }
 
-/*
-	创建子fiber
-*/
 function updateHostComponent(workInProgress: FiberNode) {
 	const nextProps = workInProgress.peddingProps;
 	const nextChildren = nextProps.children;
+	reconcileChildren(workInProgress, nextChildren);
+	return workInProgress.child;
+}
+
+/*
+	函数组件创建子fiber
+*/
+function updateFunctionComponent(workInProgress: FiberNode) {
+	const nextChildren = renderWithHooks(workInProgress);
 	reconcileChildren(workInProgress, nextChildren);
 	return workInProgress.child;
 }

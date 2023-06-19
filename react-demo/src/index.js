@@ -1,14 +1,26 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-const jsx = (
-	<div>
-		<p>我是p标签</p>
-	</div>
-);
+function App() {
+	return (
+		<div>
+			<p>
+				<Child />
+			</p>
+		</div>
+	);
+}
+
+function Child() {
+	return (
+		<p>
+			<span>我是p标签</span>
+		</p>
+	);
+}
 
 const root = document.querySelector('#root');
-ReactDOM.createRoot(root).render(jsx);
+ReactDOM.createRoot(root).render(<App />);
 
 // console.log(React);
 // console.log(jsx);

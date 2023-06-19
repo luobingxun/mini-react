@@ -9,9 +9,9 @@ export const pckDistPath = path.resolve(__dirname, '../../dist/node_modules');
 
 export const resolvePckPath = (pckName, isDist) => {
 	if (isDist) {
-		return `$pckDistPath/${pckName}`;
+		return `${pckDistPath}/${pckName}`;
 	} else {
-		return `$pckPath/${pckName}`;
+		return `${pckPath}/${pckName}`;
 	}
 };
 

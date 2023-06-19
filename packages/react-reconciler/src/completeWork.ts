@@ -5,7 +5,12 @@ import {
 	createTextInstance
 } from 'hostConfig';
 import { FiberNode } from './fiber';
-import { HostComponent, HostRoot, HostText } from './workTags';
+import {
+	FunctionComponent,
+	HostComponent,
+	HostRoot,
+	HostText
+} from './workTags';
 import { Flags, NoFlags } from './fiberFlags';
 
 export function completeWork(workInProgress: FiberNode) {
@@ -24,6 +29,9 @@ export function completeWork(workInProgress: FiberNode) {
 			bubbleProperties(workInProgress);
 			return null;
 		case HostRoot:
+			bubbleProperties(workInProgress);
+			return null;
+		case FunctionComponent:
 			bubbleProperties(workInProgress);
 			return null;
 		case HostText:
