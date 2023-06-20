@@ -2,7 +2,7 @@ import { getPckJson, pckDistPath, pckPath, getBasePlugins } from './utils';
 import generatePackageJson from 'rollup-plugin-generate-package-json';
 import alias from '@rollup/plugin-alias';
 
-const { name, module } = getPckJson('react-dom');
+const { name, module, peerDependencies } = getPckJson('react-dom');
 
 export default [
 	{
@@ -19,6 +19,7 @@ export default [
 				format: 'umd'
 			}
 		],
+		internal: [...Object.keys(peerDependencies)],
 		plugins: [
 			...getBasePlugins(),
 			alias({

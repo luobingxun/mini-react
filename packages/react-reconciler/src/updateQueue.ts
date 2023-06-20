@@ -8,6 +8,7 @@ export interface UpdateQueue<State> {
 	shared: {
 		pedding: Update<State> | null;
 	};
+	dispatch: unknown;
 }
 
 export function createUpdate<State>(action: Action<State>): Update<State> {
@@ -18,7 +19,8 @@ export function createUpdateQueue<State>(): UpdateQueue<Action<State>> {
 	return {
 		shared: {
 			pedding: null
-		}
+		},
+		dispatch: null
 	};
 }
 
