@@ -30,7 +30,7 @@ export function jsx(
 
 	for (const prop in config) {
 		if (prop === 'key' && config[prop] !== undefined) {
-			key = config[prop];
+			key = '' + config[prop];
 			continue;
 		}
 		if (prop === 'ref' && config[prop] !== undefined) {
@@ -43,13 +43,23 @@ export function jsx(
 	}
 
 	const maybeChildrenLength = maybeChildren.length;
-	if (maybeChildrenLength === 1) {
-		props.children = maybeChildren[1];
-	} else {
-		props.children = maybeChildren;
+	if (maybeChildrenLength) {
+		if (maybeChildrenLength === 1) {
+			props.children = maybeChildren[0];
+		} else {
+			props.children = maybeChildren;
+		}
 	}
 
 	return ReactElement(type, key, ref, props);
+}
+
+export function isValidElement(object: any) {
+	return (
+		typeof object === 'object' &&
+		object !== null &&
+		object.$$typeof === REACT_ELEMENT_TYPE
+	);
 }
 
 export function jsxDEV(type: Type, config: Props): ReactElementType {
@@ -59,7 +69,7 @@ export function jsxDEV(type: Type, config: Props): ReactElementType {
 
 	for (const prop in config) {
 		if (prop === 'key' && config[prop] !== undefined) {
-			key = config[prop];
+			key = '' + config[prop];
 			continue;
 		}
 		if (prop === 'ref' && config[prop] !== undefined) {

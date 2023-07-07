@@ -36,6 +36,7 @@ export function renderWithHooks(workInProgress: FiberNode) {
 	const children = Component(props);
 	// 重置
 	currentlyRenderingFiber = null;
+	workInProgressHook = null;
 	return children;
 }
 

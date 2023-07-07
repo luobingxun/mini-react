@@ -3,7 +3,7 @@ import {
 	resolveDispatcher,
 	currentDispatcher
 } from './src/currentDispatcher';
-import { jsxDEV } from './src/jsx';
+import { jsx, jsxDEV, isValidElement as isValidElementFn } from './src/jsx';
 
 export { jsxDEV };
 
@@ -17,7 +17,6 @@ export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRE = {
 	currentDispatcher
 };
 
-export default {
-	version: '0.0.0',
-	createElement: jsxDEV
-};
+export const version = '0.0.0';
+export const createElement = jsx;
+export const isValidElement = isValidElementFn;

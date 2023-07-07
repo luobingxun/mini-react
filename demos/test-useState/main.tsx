@@ -12,7 +12,7 @@ function App() {
 }
 
 function Child() {
-	const [num] = useState(100);
+	const [num] = useState(10076876);
 	return (
 		<p>
 			<span>{num}</span>

@@ -16,10 +16,10 @@ export default [
 			generatePackageJson({
 				inputFolder: `${pckPath}/${name}`,
 				outputFolder: `${pckDistPath}/${name}`,
-				baseContents: ({ name, module, description, version }) => {
+				baseContents: ({ name, description, version }) => {
 					return {
 						name,
-						module,
+						main: 'React',
 						description,
 						version
 					};
@@ -32,12 +32,12 @@ export default [
 		output: [
 			{
 				file: `${pckDistPath}/${name}/jsx-runtime.js`,
-				name: 'jsx-runtime.js',
+				name: 'jsx-runtime',
 				format: 'umd'
 			},
 			{
 				file: `${pckDistPath}/${name}/jsx-dev-runtime.js`,
-				name: 'jsx-dev-runtime.js',
+				name: 'jsx-dev-runtime',
 				format: 'umd'
 			}
 		],

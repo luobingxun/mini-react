@@ -10,12 +10,12 @@ export default [
 		output: [
 			{
 				file: `${pckDistPath}/${name}/index.js`,
-				name: 'index.js',
+				name: 'ReactDOM',
 				format: 'umd'
 			},
 			{
 				file: `${pckDistPath}/${name}/client.js`,
-				name: 'client.js',
+				name: 'client',
 				format: 'umd'
 			}
 		],
@@ -30,10 +30,9 @@ export default [
 			generatePackageJson({
 				inputFolder: `${pckPath}/${name}`,
 				outputFolder: `${pckDistPath}/${name}`,
-				baseContents: ({ name, module, description, version }) => {
+				baseContents: ({ name, description, version }) => {
 					return {
 						name,
-						module,
 						description,
 						version,
 						dependencies: {
@@ -44,5 +43,17 @@ export default [
 				}
 			})
 		]
+	},
+	{
+		input: `${pckPath}/${name}/test-utils.ts`,
+		output: [
+			{
+				file: `${pckDistPath}/${name}/test-utils.js`,
+				name: 'ReactTestUtils',
+				format: 'umd'
+			}
+		],
+		external: ['react-dom'],
+		plugins: getBasePlugins()
 	}
 ];
