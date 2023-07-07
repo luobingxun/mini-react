@@ -2,22 +2,13 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 function App() {
-	return (
-		<div>
-			<p>
-				<Child />
-			</p>
-		</div>
-	);
+	const [num, setNum] = useState(1);
+	window.setNum = setNum;
+	return <div>{num === 3 ? <Child /> : <div>{num}</div>}</div>;
 }
 
 function Child() {
-	const [num] = useState(10076876);
-	return (
-		<p>
-			<span>{num}</span>
-		</p>
-	);
+	return <span>React</span>;
 }
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

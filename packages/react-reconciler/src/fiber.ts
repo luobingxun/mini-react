@@ -32,6 +32,7 @@ export class FiberNode {
 	subtreeFlags: Flags;
 
 	updateQueue: UpdateQueue<Action<any>> | null;
+	deletions: FiberNode[] | null;
 
 	constructor(tag: WorkTags, peddingProps: Props, key: Key) {
 		// 实例
@@ -59,6 +60,7 @@ export class FiberNode {
 		this.subtreeFlags = NoFlags;
 
 		this.updateQueue = null;
+		this.deletions = null;
 	}
 }
 
@@ -88,6 +90,7 @@ export function createWorkInProgress(current: FiberNode, peddingProps: Props) {
 	} else {
 		workInProgress.flags = NoFlags;
 		workInProgress.peddingProps = peddingProps;
+		workInProgress.deletions = null;
 	}
 
 	workInProgress.type = current.type;

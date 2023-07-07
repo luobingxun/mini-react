@@ -1,3 +1,4 @@
+import { Dispatch } from 'react/src/currentDispatcher';
 import type { Action } from 'shared/ReactTypes';
 
 export interface Update<State> {
@@ -8,7 +9,7 @@ export interface UpdateQueue<State> {
 	shared: {
 		pedding: Update<State> | null;
 	};
-	dispatch: unknown;
+	dispatch: Dispatch<State> | null;
 }
 
 export function createUpdate<State>(action: Action<State>): Update<State> {

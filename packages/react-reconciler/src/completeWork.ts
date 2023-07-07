@@ -11,7 +11,11 @@ import {
 	HostRoot,
 	HostText
 } from './workTags';
-import { Flags, NoFlags } from './fiberFlags';
+import { Flags, NoFlags, Update } from './fiberFlags';
+
+function markUpdate(fiber: FiberNode) {
+	fiber.flags |= Update;
+}
 
 export function completeWork(workInProgress: FiberNode) {
 	const newProps = workInProgress.peddingProps;
@@ -36,7 +40,11 @@ export function completeWork(workInProgress: FiberNode) {
 			return null;
 		case HostText:
 			if (current !== null && workInProgress.stateNode) {
-				// update
+				const oldText = current.memoizedProps.content;
+				const newText = newProps.content;
+				if (oldText !== newText) {
+					markUpdate(workInProgress);
+				}
 			} else {
 				// mount
 				const instance = createTextInstance(newProps.content);
