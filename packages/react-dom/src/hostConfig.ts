@@ -2,13 +2,16 @@ import { FiberNode } from 'react-reconciler/src/fiber';
 import { HostComponent, HostText } from 'react-reconciler/src/workTags';
 import type { Props } from 'shared/ReactTypes';
 import { FunctionComponent } from '../../react-reconciler/src/workTags';
+import { updateFiberProps } from './sytheticEvent';
 
 export type Container = Element;
 export type Instance = Element;
 export type TextInstance = Text;
 
 export function createInstance(type: string, props: Props): Instance {
-	return document.createElement(type);
+	const instance = document.createElement(type);
+	updateFiberProps(instance, props);
+	return instance;
 }
 
 export function appendInintialChild(parent: Instance, child: Instance) {
