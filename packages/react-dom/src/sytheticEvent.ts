@@ -3,13 +3,13 @@ import type { Props } from 'shared/ReactTypes';
 
 const elementPropsKey = '__props_key';
 
-type EventCallback = (e: Event) => void;
+type EventCallback = (e: SytheticEvent) => void;
 
 interface Paths {
 	capture: EventCallback[];
 	buddle: EventCallback[];
 }
-interface SytheticEvent extends Event {
+export interface SytheticEvent extends Event {
 	__stopPropagation: boolean;
 }
 
@@ -88,7 +88,7 @@ function collectPaths(
 		}
 		currentElement = currentElement.parentNode as DOMElement;
 	}
-	console.log(paths);
+
 	return paths;
 }
 
@@ -119,11 +119,12 @@ function triggerEventFlow(
 	sytheticEvent: SytheticEvent,
 	eventCallback: EventCallback[]
 ) {
-	eventCallback.forEach((callback) => {
+	for (let i = 0; i < eventCallback.length; i++) {
+		const callback = eventCallback[i];
 		callback(sytheticEvent);
 
 		if (sytheticEvent.__stopPropagation) {
 			return;
 		}
-	});
+	}
 }
