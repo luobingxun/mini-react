@@ -63,7 +63,7 @@ function conmitRoot(root: FiberRootNode) {
 	root.finishedWork = null;
 
 	if (__DEV__) {
-		console.warn('conmitRoot没有finishedWork', finishedWork);
+		console.warn('conmitRoot执行finishedWork', finishedWork);
 	}
 
 	// 标识rootFiberNode和子节点是否存在副作用

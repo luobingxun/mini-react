@@ -2,7 +2,9 @@ import {
 	type Container,
 	appenChildIntoContainer,
 	commitUpdate,
-	removeChild
+	removeChild,
+	Instance,
+	insertChildIntoContainer
 } from 'hostConfig';
 import { FiberNode, FiberRootNode } from './fiber';
 import {
@@ -19,33 +21,34 @@ import {
 	HostText
 } from './workTags';
 
-let nextEffects: FiberNode | null = null;
+let nextEffect: FiberNode | null = null;
 
 export function commitMutationEffects(finishedWork: FiberNode) {
-	nextEffects = finishedWork;
+	nextEffect = finishedWork;
 
-	while (nextEffects !== null) {
-		const child: FiberNode | null = nextEffects.child;
+	while (nextEffect !== null) {
+		const child: FiberNode | null = nextEffect.child;
 
 		// 向下递归-找到第一个有副作用的子节点
 		if (
-			(nextEffects.subtreeFlags & MutationMask) !== NoFlags &&
+			(nextEffect.subtreeFlags & MutationMask) !== NoFlags &&
 			child !== null
 		) {
-			nextEffects = child;
+			nextEffect = child;
 		} else {
-			const sibling: FiberNode | null = nextEffects.sibling;
+			// const sibling: FiberNode | null = nextEffect.sibling;
 
 			// 向上遍历
-			up: while (nextEffects !== null) {
-				commitMutationEffectsOnfiber(nextEffects);
+			up: while (nextEffect !== null) {
+				commitMutationEffectsOnfiber(nextEffect);
 
+				const sibling: FiberNode | null = nextEffect.sibling;
 				if (sibling !== null) {
-					nextEffects = sibling;
+					nextEffect = sibling;
 					break up;
 				}
 
-				nextEffects = nextEffects.return;
+				nextEffect = nextEffect.return;
 			}
 		}
 	}
@@ -147,8 +150,14 @@ function commitPlacement(finishedWork: FiberNode) {
 	}
 
 	const hostParent = getHostParent(finishedWork);
+	const hostSibling = getHostSibling(finishedWork);
+
 	if (hostParent) {
-		appendPlacementNodeIntoContainer(hostParent, finishedWork);
+		insertOrAppendPlacementNodeIntoContainer(
+			hostParent,
+			finishedWork,
+			hostSibling
+		);
 	}
 }
 
@@ -167,23 +176,64 @@ function getHostParent(finishedWork: FiberNode) {
 	}
 }
 
-function appendPlacementNodeIntoContainer(
+function getHostSibling(finishedWork: FiberNode) {
+	let node: FiberNode = finishedWork;
+
+	findSibling: while (true) {
+		while (node.sibling === null) {
+			const parent = node.return;
+			if (
+				parent === null ||
+				parent.tag === HostComponent ||
+				parent.tag === HostRoot
+			) {
+				return null;
+			}
+			node = parent;
+		}
+		node.sibling.return = node.return;
+		node = node.sibling;
+
+		while (node.tag !== HostText && node.tag !== HostComponent) {
+			if ((node.flags & Placement) !== NoFlags) {
+				continue findSibling;
+			}
+			if (node.child === null) {
+				continue findSibling;
+			} else {
+				node.child.return = node;
+				node = node.child;
+			}
+		}
+
+		if ((node.flags & Placement) === NoFlags) {
+			return node.stateNode;
+		}
+	}
+}
+
+function insertOrAppendPlacementNodeIntoContainer(
 	hostParent: Container,
-	finishedWork: FiberNode
+	finishedWork: FiberNode,
+	before?: Instance
 ) {
 	const tag = finishedWork.tag;
 	if (tag === HostComponent || tag === HostText) {
-		appenChildIntoContainer(hostParent, finishedWork.stateNode);
+		if (before) {
+			insertChildIntoContainer(hostParent, finishedWork.stateNode, before);
+		} else {
+			appenChildIntoContainer(hostParent, finishedWork.stateNode);
+		}
 		return;
 	}
 	const child = finishedWork.child;
 	if (child !== null) {
-		appendPlacementNodeIntoContainer(hostParent, child);
+		insertOrAppendPlacementNodeIntoContainer(hostParent, child);
 
 		let sibling = child.sibling;
 
 		while (sibling !== null) {
-			appendPlacementNodeIntoContainer(hostParent, sibling);
+			insertOrAppendPlacementNodeIntoContainer(hostParent, sibling);
 			sibling = sibling.sibling;
 		}
 	}

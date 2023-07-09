@@ -26,6 +26,14 @@ export function appenChildIntoContainer(container: Instance, child: Instance) {
 	container.appendChild(child);
 }
 
+export function insertChildIntoContainer(
+	container: Instance,
+	child: Instance,
+	before: Instance
+) {
+	container.insertBefore(child, before);
+}
+
 export function removeChild(contaner: Instance, child: Instance) {
 	contaner.removeChild(child);
 }

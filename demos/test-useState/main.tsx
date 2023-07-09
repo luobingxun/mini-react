@@ -2,19 +2,15 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 function App() {
-	const [num, setNum] = useState(1);
+	const [num, setNum] = useState(false);
 	// window.setNum = setNum;
-	return (
-		<div onClick={() => setNum(num + 1)}>
-			{num === 3 ? <Child /> : <div>{num}</div>}
-		</div>
-	);
-}
+	const arr =
+		num === false
+			? [<li key="1">1</li>, <li key="2">2</li>, <li key="3">3</li>]
+			: [<li key="3">3</li>, <li key="2">2</li>, <li key="1">1</li>];
 
-function Child() {
-	return <span>React</span>;
+	return <ul onClick={() => setNum(!num)}>{arr}</ul>;
 }
-
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 	<App />
 );

@@ -146,6 +146,7 @@ function ChildrenReconciler(shouldTrackEffect: boolean) {
 				const oldIndex = current.index;
 				if (oldIndex < lastPlacedIndex) {
 					newFiber.flags |= Placement;
+					continue;
 				} else {
 					lastPlacedIndex = oldIndex;
 				}
@@ -175,10 +176,10 @@ function ChildrenReconciler(shouldTrackEffect: boolean) {
 			if (before) {
 				if (before.tag === HostText) {
 					existingChildren.delete(keyToUse);
-					return useFiber(before, { element });
+					return useFiber(before, { content: element + '' });
 				}
 			}
-			return new FiberNode(HostText, {}, { element });
+			return new FiberNode(HostText, { content: element + '' }, null);
 		}
 
 		if (typeof element === 'object' && element !== null) {
