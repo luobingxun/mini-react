@@ -1,5 +1,6 @@
 import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbol';
 import { Key, Props, ReactElementType, Ref, Type } from 'shared/ReactTypes';
+import { REACT_FRAGMENT_TYPE } from '../../shared/ReactSymbol';
 
 function ReactElement(
 	type: Type,
@@ -61,6 +62,8 @@ export function isValidElement(object: any) {
 		object.$$typeof === REACT_ELEMENT_TYPE
 	);
 }
+
+export const Fragment = REACT_FRAGMENT_TYPE;
 
 export function jsxDEV(type: Type, config: Props): ReactElementType {
 	let key: Key = null;

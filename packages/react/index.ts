@@ -3,9 +3,15 @@ import {
 	resolveDispatcher,
 	currentDispatcher
 } from './src/currentDispatcher';
-import { jsx, jsxDEV, isValidElement as isValidElementFn } from './src/jsx';
+import {
+	jsx,
+	jsxDEV,
+	isValidElement as isValidElementFn,
+	Fragment
+} from './src/jsx';
 
 export { jsxDEV };
+export { Fragment };
 
 export const useState: Dispatcher['useState'] = (initialState) => {
 	const dispatcher = resolveDispatcher();

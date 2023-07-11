@@ -1,10 +1,11 @@
 import {
 	FiberNode,
 	createFiberFromElement,
+	createFiberFromFragment,
 	createWorkInProgress
 } from './fiber';
-import type { Props, ReactElementType } from 'shared/ReactTypes';
-import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbol';
+import type { Key, Props, ReactElementType } from 'shared/ReactTypes';
+import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from 'shared/ReactSymbol';
 import { HostText } from './workTags';
 import { ChildDeletion, Placement } from './fiberFlags';
 
@@ -45,8 +46,12 @@ function ChildrenReconciler(shouldTrackEffect: boolean) {
 			if (key === currentFiber.key) {
 				if (element.$$typeof === REACT_ELEMENT_TYPE) {
 					if (element.type === currentFiber.type) {
+						let props = element.props;
+						if (element.type === REACT_FRAGMENT_TYPE) {
+							props = element.props.children;
+						}
 						// 复用fiber
-						const existing = useFiber(currentFiber, element.props);
+						const existing = useFiber(currentFiber, props);
 						deleteRemainingChildren(returnFiber, currentFiber.sibling);
 						existing.return = returnFiber;
 						return existing;
@@ -65,7 +70,16 @@ function ChildrenReconciler(shouldTrackEffect: boolean) {
 			}
 		}
 
-		const fiber = createFiberFromElement(element);
+		let fiber: FiberNode;
+		if (element.type === REACT_FRAGMENT_TYPE) {
+			fiber = createFiberFromFragment(
+				element.props.children,
+				element.props.key
+			);
+		} else {
+			fiber = createFiberFromElement(element);
+		}
+
 		fiber.return = returnFiber;
 		return fiber;
 	}
@@ -163,56 +177,20 @@ function ChildrenReconciler(shouldTrackEffect: boolean) {
 		return firstNewFiber;
 	}
 
-	function updateFromMap(
-		returnFiber: FiberNode,
-		existingChildren: ExistingChildren,
-		index: number,
-		element: any
-	) {
-		const keyToUse = element.key !== null ? element.key : index;
-		const before = existingChildren.get(keyToUse);
-
-		if (typeof element === 'string' || typeof element === 'number') {
-			if (before) {
-				if (before.tag === HostText) {
-					existingChildren.delete(keyToUse);
-					return useFiber(before, { content: element + '' });
-				}
-			}
-			return new FiberNode(HostText, { content: element + '' }, null);
-		}
-
-		if (typeof element === 'object' && element !== null) {
-			switch (element.$$typeof) {
-				case REACT_ELEMENT_TYPE:
-					if (before) {
-						if (before.type === element.type) {
-							existingChildren.delete(keyToUse);
-							return useFiber(before, element.props);
-						}
-					}
-					return createFiberFromElement(element);
-				default:
-					if (__DEV__) {
-						console.warn('updateFormMap为实现的类型', element);
-					}
-					break;
-			}
-
-			// TODO: element为数组类型
-			if (Array.isArray(element)) {
-				console.log('todo elemnet 为数组类型');
-			}
-		}
-
-		return null;
-	}
-
 	return function reconcileChildFibers(
 		returnFiber: FiberNode,
 		currentFiber: FiberNode | null,
 		newChild: ReactElementType | null
 	) {
+		const isUnkeyedTopLevelFragment =
+			typeof newChild === 'object' &&
+			newChild !== null &&
+			newChild.key === null &&
+			newChild.type === REACT_FRAGMENT_TYPE;
+		if (isUnkeyedTopLevelFragment) {
+			newChild = newChild?.props.children;
+		}
+
 		// 单个节点
 		if (typeof newChild === 'object' && newChild !== null) {
 			const $$typeof = newChild.$$typeof;
@@ -252,6 +230,84 @@ function ChildrenReconciler(shouldTrackEffect: boolean) {
 
 		return null;
 	};
+}
+
+function updateFromMap(
+	returnFiber: FiberNode,
+	existingChildren: ExistingChildren,
+	index: number,
+	element: any
+) {
+	const keyToUse = element.key !== null ? element.key : index;
+	const before = existingChildren.get(keyToUse);
+
+	if (typeof element === 'string' || typeof element === 'number') {
+		if (before) {
+			if (before.tag === HostText) {
+				existingChildren.delete(keyToUse);
+				return useFiber(before, { content: element + '' });
+			}
+		}
+		return new FiberNode(HostText, { content: element + '' }, null);
+	}
+
+	if (typeof element === 'object' && element !== null) {
+		// TODO: element为数组类型
+		if (Array.isArray(element)) {
+			return updateFragment(
+				returnFiber,
+				before,
+				element,
+				keyToUse,
+				existingChildren
+			);
+		}
+
+		switch (element.$$typeof) {
+			case REACT_ELEMENT_TYPE:
+				if (element.type === REACT_FRAGMENT_TYPE) {
+					return updateFragment(
+						returnFiber,
+						before,
+						element.props.children,
+						keyToUse,
+						existingChildren
+					);
+				}
+				if (before) {
+					if (before.type === element.type) {
+						existingChildren.delete(keyToUse);
+						return useFiber(before, element.props);
+					}
+				}
+				return createFiberFromElement(element);
+			default:
+				if (__DEV__) {
+					console.warn('updateFormMap为实现的类型', element);
+				}
+				break;
+		}
+	}
+
+	return null;
+}
+
+function updateFragment(
+	returnFiber: FiberNode,
+	current: FiberNode | undefined,
+	elements: any,
+	key: Key,
+	existingChildren: ExistingChildren
+) {
+	let fiber: FiberNode;
+	if (!current || current.type !== REACT_FRAGMENT_TYPE) {
+		fiber = createFiberFromFragment(elements, key);
+	} else {
+		existingChildren.delete(key);
+		fiber = useFiber(current, elements);
+	}
+	fiber.return = returnFiber;
+	return fiber;
 }
 
 function useFiber(fiber: FiberNode, props: Props) {

@@ -36,8 +36,6 @@ export function commitMutationEffects(finishedWork: FiberNode) {
 		) {
 			nextEffect = child;
 		} else {
-			// const sibling: FiberNode | null = nextEffect.sibling;
-
 			// 向上遍历
 			up: while (nextEffect !== null) {
 				commitMutationEffectsOnfiber(nextEffect);
@@ -81,20 +79,34 @@ function commitMutationEffectsOnfiber(finishedWork: FiberNode) {
 	}
 }
 
+function recordChildrenToDelete(
+	childrenToDelete: FiberNode[],
+	unmountFiber: FiberNode
+) {
+	const lastOne = childrenToDelete[childrenToDelete.length - 1];
+	if (!lastOne) {
+		childrenToDelete.push(unmountFiber);
+	} else {
+		let node = lastOne.sibling;
+		while (node !== null) {
+			if (unmountFiber === node) {
+				childrenToDelete.push(unmountFiber);
+			}
+			node = node.sibling;
+		}
+	}
+}
+
 function commitChildDeletion(childToDelete: FiberNode) {
-	let hostUnmountNode: FiberNode | null = null;
+	const rootChildrenToDelete: FiberNode[] = [];
 
 	commitNestedComponent(childToDelete, (unmountFiber) => {
 		switch (unmountFiber.tag) {
 			case HostComponent:
-				if (hostUnmountNode === null) {
-					hostUnmountNode = unmountFiber;
-				}
+				recordChildrenToDelete(rootChildrenToDelete, unmountFiber);
 				return;
 			case HostText:
-				if (hostUnmountNode === null) {
-					hostUnmountNode = unmountFiber;
-				}
+				recordChildrenToDelete(rootChildrenToDelete, unmountFiber);
 				return;
 			case FunctionComponent:
 			default:
@@ -104,14 +116,16 @@ function commitChildDeletion(childToDelete: FiberNode) {
 		}
 	});
 
-	if (hostUnmountNode !== null) {
-		const hostParent = getHostParent(hostUnmountNode);
+	if (rootChildrenToDelete.length) {
+		const hostParent = getHostParent(childToDelete);
 		if (hostParent) {
-			removeChild(hostParent, (hostUnmountNode as FiberNode).stateNode);
+			rootChildrenToDelete.forEach((node) => {
+				removeChild(hostParent, node.stateNode);
+			});
 		}
-		(hostUnmountNode as FiberNode).return = null;
-		(hostUnmountNode as FiberNode).child = null;
 	}
+	childToDelete.return = null;
+	childToDelete.child = null;
 }
 
 function commitNestedComponent(

@@ -6,7 +6,12 @@ import type {
 	Ref,
 	Type
 } from 'shared/ReactTypes';
-import { FunctionComponent, HostComponent, type WorkTags } from './workTags';
+import {
+	Fragment,
+	FunctionComponent,
+	HostComponent,
+	type WorkTags
+} from './workTags';
 import { type Flags, NoFlags } from './fiberFlags';
 import { Container } from 'hostConfig';
 import { UpdateQueue } from './updateQueue';
@@ -37,7 +42,7 @@ export class FiberNode {
 	constructor(tag: WorkTags, peddingProps: Props, key: Key) {
 		// 实例
 		this.tag = tag;
-		this.key = key;
+		this.key = key || null;
 		this.stateNode = null;
 		this.type = null;
 
@@ -118,5 +123,10 @@ export function createFiberFromElement(element: ReactElementType) {
 
 	fiber.type = type;
 
+	return fiber;
+}
+
+export function createFiberFromFragment(elements: any[], key: Key) {
+	const fiber = new FiberNode(Fragment, elements, key);
 	return fiber;
 }

@@ -5,7 +5,8 @@ import {
 	FunctionComponent,
 	HostComponent,
 	HostRoot,
-	HostText
+	HostText,
+	Fragment
 } from './workTags';
 import { mountChildFibers, reconcileChildFibers } from './childFIber';
 import { renderWithHooks } from './fiberHooks';
@@ -18,6 +19,9 @@ export function beginWork(workInProgress: FiberNode) {
 			return updateHostComponent(workInProgress);
 		case FunctionComponent:
 			return updateFunctionComponent(workInProgress);
+
+		case Fragment:
+			return updateFragment(workInProgress);
 		case HostText: {
 			return null;
 		}
@@ -55,13 +59,16 @@ function updateHostComponent(workInProgress: FiberNode) {
 	return workInProgress.child;
 }
 
-/*
-	函数组件创建子fiber
-*/
 function updateFunctionComponent(workInProgress: FiberNode) {
 	const nextChildren = renderWithHooks(workInProgress);
 	reconcileChildren(workInProgress, nextChildren);
 	return workInProgress.child;
+}
+
+function updateFragment(workInprogress: FiberNode) {
+	const nextChildren = workInprogress.peddingProps;
+	reconcileChildren(workInprogress, nextChildren);
+	return workInprogress.child;
 }
 
 function reconcileChildren(

@@ -9,7 +9,8 @@ import {
 	FunctionComponent,
 	HostComponent,
 	HostRoot,
-	HostText
+	HostText,
+	Fragment
 } from './workTags';
 import { Flags, NoFlags, Update } from './fiberFlags';
 import { updateFiberProps } from 'react-dom/src/sytheticEvent';
@@ -34,12 +35,6 @@ export function completeWork(workInProgress: FiberNode) {
 			}
 			bubbleProperties(workInProgress);
 			return null;
-		case HostRoot:
-			bubbleProperties(workInProgress);
-			return null;
-		case FunctionComponent:
-			bubbleProperties(workInProgress);
-			return null;
 		case HostText:
 			if (current !== null && workInProgress.stateNode) {
 				const oldText = current.memoizedProps.content;
@@ -52,6 +47,11 @@ export function completeWork(workInProgress: FiberNode) {
 				const instance = createTextInstance(newProps.content);
 				workInProgress.stateNode = instance;
 			}
+			bubbleProperties(workInProgress);
+			return null;
+		case HostRoot:
+		case Fragment:
+		case FunctionComponent:
 			bubbleProperties(workInProgress);
 			return null;
 		default:
