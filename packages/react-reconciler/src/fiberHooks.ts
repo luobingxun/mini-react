@@ -10,6 +10,7 @@ import { scheduleUpdateOnFiber } from './workLoop';
 import type { Dispatch, Dispatcher } from 'react/src/currentDispatcher';
 import { type Update, type UpdateQueue } from './updateQueue';
 import type { Action } from 'shared/ReactTypes';
+import { Lane, NoLane, requestUpdateLane } from './fiberLane';
 
 const { currentDispatcher } = internals;
 
@@ -22,10 +23,12 @@ interface Hook {
 let currentlyRenderingFiber: FiberNode | null = null;
 let workInProgressHook: Hook | null = null;
 let currentHook: Hook | null = null;
+let renderLane: Lane = NoLane;
 
-export function renderWithHooks(workInProgress: FiberNode) {
+export function renderWithHooks(workInProgress: FiberNode, lane: Lane) {
 	currentlyRenderingFiber = workInProgress;
 	const current = workInProgress.alternate;
+	renderLane = lane;
 
 	if (current !== null) {
 		currentDispatcher.current = HooksDispatcherOnUpdate;
@@ -40,6 +43,7 @@ export function renderWithHooks(workInProgress: FiberNode) {
 	currentlyRenderingFiber = null;
 	workInProgressHook = null;
 	currentHook = null;
+	renderLane = NoLane;
 	return children;
 }
 
@@ -75,9 +79,10 @@ function dispatchSetState<T>(
 	queue: UpdateQueue<T>,
 	action: Action<T>
 ) {
-	const update = createUpdate(action);
+	const lane = requestUpdateLane();
+	const update = createUpdate(action, lane);
 	enqueueUpdate(queue, update);
-	scheduleUpdateOnFiber(currentlyRenderingFiber);
+	scheduleUpdateOnFiber(currentlyRenderingFiber, lane);
 }
 
 function mountWorkInProgressHook() {
@@ -108,9 +113,14 @@ function updateState<T>(): [T, Dispatch<T>] {
 	const queue = hook.updateQueue as UpdateQueue<T>;
 	const dispatch = queue.dispatch as Dispatch<T>;
 	const pedding = queue.shared.pedding as Update<T>;
+	queue.shared.pedding = null;
 
 	if (pedding !== null) {
-		const { memoizedState } = processUpdateQueue(hook.memmoizedState, pedding);
+		const { memoizedState } = processUpdateQueue(
+			hook.memmoizedState,
+			pedding,
+			renderLane
+		);
 		hook.memmoizedState = memoizedState;
 	}
 

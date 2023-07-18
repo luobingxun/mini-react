@@ -15,6 +15,7 @@ import {
 import { type Flags, NoFlags } from './fiberFlags';
 import { Container } from 'hostConfig';
 import { UpdateQueue } from './updateQueue';
+import { Lane, Lanes, NoLane, NoLanes } from './fiberLane';
 
 export class FiberNode {
 	type: Type;
@@ -73,12 +74,17 @@ export class FiberRootNode {
 	current: FiberNode;
 	container: Container;
 	finishedWork: FiberNode | null;
+	peddingLanes: Lanes;
+	finishedLane: Lane;
 
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		this.container = container;
 		this.current = hostRootFiber;
 		hostRootFiber.stateNode = this;
 		this.finishedWork = null;
+
+		this.peddingLanes = NoLanes;
+		this.finishedLane = NoLane;
 	}
 }
 

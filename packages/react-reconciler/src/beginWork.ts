@@ -10,15 +10,16 @@ import {
 } from './workTags';
 import { mountChildFibers, reconcileChildFibers } from './childFIber';
 import { renderWithHooks } from './fiberHooks';
+import { Lane } from './fiberLane';
 
-export function beginWork(workInProgress: FiberNode) {
+export function beginWork(workInProgress: FiberNode, renderLane: Lane) {
 	switch (workInProgress.tag) {
 		case HostRoot:
-			return updateHostRoot(workInProgress);
+			return updateHostRoot(workInProgress, renderLane);
 		case HostComponent:
 			return updateHostComponent(workInProgress);
 		case FunctionComponent:
-			return updateFunctionComponent(workInProgress);
+			return updateFunctionComponent(workInProgress, renderLane);
 
 		case Fragment:
 			return updateFragment(workInProgress);
@@ -38,13 +39,13 @@ export function beginWork(workInProgress: FiberNode) {
 	1.计算最新的状态
 	2.创建子fiber
 */
-function updateHostRoot(workInProgress: FiberNode) {
+function updateHostRoot(workInProgress: FiberNode, renderLane: Lane) {
 	const baseState = workInProgress.memoizedState;
 	const updateQueue =
 		workInProgress.updateQueue as UpdateQueue<ReactElementType>;
 	const pedding = updateQueue.shared.pedding;
 	updateQueue.shared.pedding = null;
-	const { memoizedState } = processUpdateQueue(baseState, pedding);
+	const { memoizedState } = processUpdateQueue(baseState, pedding, renderLane);
 	workInProgress.memoizedState = memoizedState;
 
 	const nextChildren = workInProgress.memoizedState;
@@ -59,8 +60,8 @@ function updateHostComponent(workInProgress: FiberNode) {
 	return workInProgress.child;
 }
 
-function updateFunctionComponent(workInProgress: FiberNode) {
-	const nextChildren = renderWithHooks(workInProgress);
+function updateFunctionComponent(workInProgress: FiberNode, renderLane: Lane) {
+	const nextChildren = renderWithHooks(workInProgress, renderLane);
 	reconcileChildren(workInProgress, nextChildren);
 	return workInProgress.child;
 }

@@ -56,3 +56,10 @@ export function commitUpdate(finishedWork: FiberNode) {
 function commitTextUpdate(textInstance: TextInstance, content: string) {
 	textInstance.textContent = content;
 }
+
+export const scheduleMircoTask =
+	typeof queueMicrotask === 'function'
+		? queueMicrotask
+		: typeof Promise === 'function'
+		? (callback: () => void) => Promise.resolve().then(callback)
+		: setTimeout;
