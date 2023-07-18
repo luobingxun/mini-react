@@ -16,6 +16,7 @@ import { type Flags, NoFlags } from './fiberFlags';
 import { Container } from 'hostConfig';
 import { UpdateQueue } from './updateQueue';
 import { Lane, Lanes, NoLane, NoLanes } from './fiberLane';
+import { Effect } from './fiberHooks';
 
 export class FiberNode {
 	type: Type;
@@ -70,12 +71,18 @@ export class FiberNode {
 	}
 }
 
+export interface PeddingPassiveEffects {
+	unmount: Effect[];
+	update: Effect[];
+}
+
 export class FiberRootNode {
 	current: FiberNode;
 	container: Container;
 	finishedWork: FiberNode | null;
 	peddingLanes: Lanes;
 	finishedLane: Lane;
+	peddingPassiveEffects: PeddingPassiveEffects;
 
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		this.container = container;
@@ -85,6 +92,10 @@ export class FiberRootNode {
 
 		this.peddingLanes = NoLanes;
 		this.finishedLane = NoLane;
+		this.peddingPassiveEffects = {
+			unmount: [],
+			update: []
+		};
 	}
 }
 

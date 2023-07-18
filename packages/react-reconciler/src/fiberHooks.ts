@@ -13,7 +13,7 @@ import type { Action } from 'shared/ReactTypes';
 import { type Lane, NoLane, requestUpdateLane } from './fiberLane';
 import { Flags, PassiveEffect } from './fiberFlags';
 
-import { Passive } from './hookEffectTags';
+import { HookHasEffect, Passive } from './hookEffectTags';
 
 const { currentDispatcher } = internals;
 
@@ -33,7 +33,7 @@ export interface Effect {
 export type EffectCallback = (() => void) | void;
 export type EffectDeps = any[] | null;
 
-interface FCUpdateQueue<State> extends UpdateQueue<State> {
+export interface FCUpdateQueue<State> extends UpdateQueue<State> {
 	lastEffect: Effect | null;
 }
 
@@ -45,6 +45,8 @@ let renderLane: Lane = NoLane;
 export function renderWithHooks(workInProgress: FiberNode, lane: Lane) {
 	currentlyRenderingFiber = workInProgress;
 	const current = workInProgress.alternate;
+	workInProgress.memoizedState = null;
+	workInProgress.updateQueue = null;
 	renderLane = lane;
 
 	if (current !== null) {
@@ -71,7 +73,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 
 const HooksDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
-	useEffect: mountEffect
+	useEffect: updateEffect
 };
 
 function mountState<T>(initialState: T | (() => T)): [T, Dispatch<T>] {
@@ -192,11 +194,39 @@ function mountEffect(create: EffectCallback, deps: EffectDeps) {
 	(currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
 
 	hook.memmoizedState = pushEffect(
-		Passive | PassiveEffect,
+		Passive | HookHasEffect,
 		create,
 		undefined,
 		nextDeps
 	);
+}
+
+function updateEffect(create: EffectCallback, deps: EffectDeps) {
+	const hook = updateWorkInProgressHook();
+	const nextDeps = typeof deps === 'undefined' ? null : deps;
+	let destroy: EffectCallback | void;
+
+	if (currentHook !== null) {
+		const prevEffect = hook.memmoizedState as Effect;
+		destroy = prevEffect.destroy;
+
+		if (nextDeps !== null) {
+			const prevDeps = prevEffect.deps;
+
+			if (areHookInputsEquals(nextDeps, prevDeps)) {
+				hook.memmoizedState = pushEffect(Passive, create, destroy, nextDeps);
+				return;
+			}
+		}
+
+		(currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
+		hook.memmoizedState = pushEffect(
+			Passive | HookHasEffect,
+			create,
+			destroy,
+			nextDeps
+		);
+	}
 }
 
 function pushEffect(
@@ -214,12 +244,11 @@ function pushEffect(
 	};
 	const fiber = currentlyRenderingFiber as FiberNode;
 	const updateQueue = fiber.updateQueue as FCUpdateQueue<any>;
-
 	if (updateQueue === null) {
-		const updateQueue = createFCUpdateQueue();
-		fiber.updateQueue = updateQueue;
+		const newUpdateQueue = createFCUpdateQueue();
+		fiber.updateQueue = newUpdateQueue;
 		effect.next = effect;
-		updateQueue.lastEffect = effect;
+		newUpdateQueue.lastEffect = effect;
 	} else {
 		const lastEffect = updateQueue.lastEffect;
 		if (lastEffect === null) {
@@ -232,7 +261,6 @@ function pushEffect(
 			updateQueue.lastEffect = effect;
 		}
 	}
-
 	return effect;
 }
 
@@ -240,4 +268,19 @@ function createFCUpdateQueue() {
 	const updateQueue = createUpdateQueue() as FCUpdateQueue<any>;
 	updateQueue.lastEffect = null;
 	return updateQueue;
+}
+
+function areHookInputsEquals(nextDeps: EffectDeps, prevDeps: EffectDeps) {
+	if (prevDeps === null || nextDeps === null) {
+		return false;
+	}
+
+	for (let i = 0; i < nextDeps.length && i < prevDeps.length; i++) {
+		if (Object.is(prevDeps[i], nextDeps[i])) {
+			continue;
+		}
+		return false;
+	}
+
+	return true;
 }
