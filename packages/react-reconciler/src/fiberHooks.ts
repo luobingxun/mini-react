@@ -8,9 +8,12 @@ import {
 import internals from 'shared/internals';
 import { scheduleUpdateOnFiber } from './workLoop';
 import type { Dispatch, Dispatcher } from 'react/src/currentDispatcher';
-import { type Update, type UpdateQueue } from './updateQueue';
+import type { Update, UpdateQueue } from './updateQueue';
 import type { Action } from 'shared/ReactTypes';
-import { Lane, NoLane, requestUpdateLane } from './fiberLane';
+import { type Lane, NoLane, requestUpdateLane } from './fiberLane';
+import { Flags, PassiveEffect } from './fiberFlags';
+
+import { Passive } from './hookEffectTags';
 
 const { currentDispatcher } = internals;
 
@@ -18,6 +21,20 @@ interface Hook {
 	memmoizedState: any;
 	updateQueue: UpdateQueue<any> | null;
 	next: Hook | null;
+}
+
+export interface Effect {
+	tag: Flags;
+	create: EffectCallback;
+	destroy: EffectCallback;
+	deps: EffectDeps;
+	next: Effect | null;
+}
+export type EffectCallback = (() => void) | void;
+export type EffectDeps = any[] | null;
+
+interface FCUpdateQueue<State> extends UpdateQueue<State> {
+	lastEffect: Effect | null;
 }
 
 let currentlyRenderingFiber: FiberNode | null = null;
@@ -48,11 +65,13 @@ export function renderWithHooks(workInProgress: FiberNode, lane: Lane) {
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
-	useState: mountState
+	useState: mountState,
+	useEffect: mountEffect
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
-	useState: updateState
+	useState: updateState,
+	useEffect: mountEffect
 };
 
 function mountState<T>(initialState: T | (() => T)): [T, Dispatch<T>] {
@@ -165,4 +184,60 @@ function updateWorkInProgressHook() {
 	}
 
 	return workInProgressHook;
+}
+
+function mountEffect(create: EffectCallback, deps: EffectDeps) {
+	const hook = mountWorkInProgressHook();
+	const nextDeps = typeof deps === 'undefined' ? null : deps;
+	(currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
+
+	hook.memmoizedState = pushEffect(
+		Passive | PassiveEffect,
+		create,
+		undefined,
+		nextDeps
+	);
+}
+
+function pushEffect(
+	hookFlag: Flags,
+	create: EffectCallback,
+	destroy: EffectCallback,
+	deps: EffectDeps
+) {
+	const effect: Effect = {
+		tag: hookFlag,
+		create,
+		destroy,
+		deps,
+		next: null
+	};
+	const fiber = currentlyRenderingFiber as FiberNode;
+	const updateQueue = fiber.updateQueue as FCUpdateQueue<any>;
+
+	if (updateQueue === null) {
+		const updateQueue = createFCUpdateQueue();
+		fiber.updateQueue = updateQueue;
+		effect.next = effect;
+		updateQueue.lastEffect = effect;
+	} else {
+		const lastEffect = updateQueue.lastEffect;
+		if (lastEffect === null) {
+			effect.next = effect;
+			updateQueue.lastEffect = effect;
+		} else {
+			const firstEffect = updateQueue.lastEffect?.next as Effect;
+			effect.next = firstEffect;
+			(updateQueue.lastEffect as Effect).next = effect;
+			updateQueue.lastEffect = effect;
+		}
+	}
+
+	return effect;
+}
+
+function createFCUpdateQueue() {
+	const updateQueue = createUpdateQueue() as FCUpdateQueue<any>;
+	updateQueue.lastEffect = null;
+	return updateQueue;
 }
