@@ -110,10 +110,10 @@ export function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
 	root.finishedLane = workInProgressRootRenderLane;
 	workInProgressRootRenderLane = NoLane;
 
-	conmitRoot(root);
+	commitRoot(root);
 }
 
-function conmitRoot(root: FiberRootNode) {
+function commitRoot(root: FiberRootNode) {
 	const finishedWork = root.finishedWork;
 	const lane = root.finishedLane;
 
@@ -166,7 +166,7 @@ function conmitRoot(root: FiberRootNode) {
 	}
 
 	rootDoesPassiveEffects = false;
-	flushSyncCallbacks();
+	ensureRootIsScheduled(root);
 }
 
 function flushPassiveEffects(peddingPassiveEffects: PeddingPassiveEffects) {

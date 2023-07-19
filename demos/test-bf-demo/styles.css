@@ -1,0 +1,17 @@
+#root {
+	word-break: break-all;
+}
+
+.pri-1 {
+	color: red;
+}
+
+.pri-2 {
+	color: green;
+}
+.pri-3 {
+	color: blue;
+}
+.pri-4 {
+	color: yellow;
+}
