@@ -1,15 +1,15 @@
 import {
+	type Instance,
 	type Container,
 	appenChildIntoContainer,
 	commitUpdate,
 	removeChild,
-	Instance,
 	insertChildIntoContainer
 } from 'hostConfig';
 import { FiberNode, FiberRootNode, PeddingPassiveEffects } from './fiber';
 import {
+	type Flags,
 	ChildDeletion,
-	Flags,
 	MutationMask,
 	NoFlags,
 	PassiveEffect,

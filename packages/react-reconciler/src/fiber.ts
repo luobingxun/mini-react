@@ -17,6 +17,7 @@ import { Container } from 'hostConfig';
 import { UpdateQueue } from './updateQueue';
 import { Lane, Lanes, NoLane, NoLanes } from './fiberLane';
 import { Effect } from './fiberHooks';
+import { CallbackNode } from 'scheduler';
 
 export class FiberNode {
 	type: Type;
@@ -84,6 +85,9 @@ export class FiberRootNode {
 	finishedLane: Lane;
 	peddingPassiveEffects: PeddingPassiveEffects;
 
+	callbackNode: CallbackNode | null;
+	callbackPriority: number;
+
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		this.container = container;
 		this.current = hostRootFiber;
@@ -96,6 +100,9 @@ export class FiberRootNode {
 			unmount: [],
 			update: []
 		};
+
+		this.callbackNode = null;
+		this.callbackPriority = NoLane;
 	}
 }
 

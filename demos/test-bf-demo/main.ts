@@ -30,6 +30,14 @@ let currCallback: CallbackNode | null = null;
 let prevPriority: Priority = IdlePriority;
 let cbNode: CallbackNode | null = null;
 
+/*
+	四种情况来分析流程
+	1.当前的work执行完毕，开始下一个优先级
+	2.当前work没有执行完毕，没有加入新的优先级
+	3.当前work没有执行完毕，加入相同优先级的任务
+	4.当前work没有执行完毕，加入更高优先级的任务
+*/
+
 function schedule() {
 	cbNode = getFirstCallbackNode();
 	const currWork = workList.sort((a, b) => a.priority - b.priority)[0];
@@ -91,7 +99,7 @@ function insertSpan(content: string) {
 		const btn = document.createElement('button');
 		btn.onclick = () => {
 			workList.push({
-				count: 100,
+				count: 1000,
 				priority
 			} as Work);
 			schedule();

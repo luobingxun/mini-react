@@ -5,7 +5,6 @@
 .pri-1 {
 	color: red;
 }
-
 .pri-2 {
 	color: green;
 }
@@ -13,5 +12,5 @@
 	color: blue;
 }
 .pri-4 {
-	color: yellow;
+	color: rgb(255, 0, 179);
 }
