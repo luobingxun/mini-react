@@ -15,7 +15,7 @@ import { Flags, PassiveEffect } from './fiberFlags';
 
 import { HookHasEffect, Passive } from './hookEffectTags';
 
-const { currentDispatcher } = internals;
+const { currentDispatcher, reactCurrentBatchConfig } = internals;
 
 interface Hook {
 	memoizedState: any;
@@ -70,12 +70,14 @@ export function renderWithHooks(workInProgress: FiberNode, lane: Lane) {
 
 const HooksDispatcherOnMount: Dispatcher = {
 	useState: mountState,
-	useEffect: mountEffect
+	useEffect: mountEffect,
+	useTransition: mountTransition
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
-	useEffect: updateEffect
+	useEffect: updateEffect,
+	useTransition: updateTransition
 };
 
 function mountState<T>(initialState: T | (() => T)): [T, Dispatch<T>] {
@@ -87,6 +89,7 @@ function mountState<T>(initialState: T | (() => T)): [T, Dispatch<T>] {
 		memoizedState = initialState;
 	}
 	hook.memoizedState = memoizedState;
+	hook.baseState = memoizedState;
 	const queue = createUpdateQueue();
 	hook.updateQueue = queue;
 
@@ -154,6 +157,7 @@ function updateState<T>(): [T, Dispatch<T>] {
 		}
 		current.baseQueue = pedding;
 		baseQueue = pedding;
+		queue.shared.pedding = null;
 	}
 
 	if (baseQueue !== null) {
@@ -307,4 +311,31 @@ function areHookInputsEquals(nextDeps: EffectDeps, prevDeps: EffectDeps) {
 	}
 
 	return true;
+}
+
+function mountTransition(): [boolean, (callback: () => void) => void] {
+	const [isPedding, setPedding] = mountState(false);
+	const hook = mountWorkInProgressHook();
+	const start = startTransition.bind(null, setPedding);
+	hook.memoizedState = start;
+	return [isPedding, start];
+}
+
+function updateTransition(): [boolean, (callback: () => void) => void] {
+	const [isPedding] = updateState<boolean>();
+	const hook = updateWorkInProgressHook();
+	const start = hook.memoizedState;
+	return [isPedding, start];
+}
+
+function startTransition(setPedding: Dispatch<boolean>, callback: () => void) {
+	setPedding(true);
+
+	const prevTransition = reactCurrentBatchConfig.transition;
+	reactCurrentBatchConfig.transition = 1;
+
+	callback();
+	setPedding(false);
+
+	reactCurrentBatchConfig.transition = prevTransition;
 }

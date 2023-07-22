@@ -6,22 +6,30 @@ import {
 	unstable_getCurrentPriorityLevel
 } from 'scheduler';
 import { FiberRootNode } from './fiber';
+import internals from 'shared/internals';
+const { reactCurrentBatchConfig } = internals;
 
 export type Lane = number;
 export type Lanes = number;
 
-export const NoLane = 0b0000;
-export const NoLanes = 0b0000;
-export const SyncLane = 0b0001;
-export const InputContinuousLane = 0b0010;
-export const DefaultLane = 0b0100;
-export const IdleLane = 0b1000;
+export const NoLane = 0b00000;
+export const NoLanes = 0b00000;
+export const SyncLane = 0b00001;
+export const InputContinuousLane = 0b00010;
+export const DefaultLane = 0b00100;
+export const Transition = 0b01000;
+export const IdleLane = 0b10000;
 
 export function mergeLanes(laneA: Lane, laneB: Lane): Lane {
 	return laneA | laneB;
 }
 
 export function requestUpdateLane(): Lane {
+	const isTransition = reactCurrentBatchConfig.transition !== null;
+	if (isTransition) {
+		return Transition;
+	}
+
 	const schedulerPriority = unstable_getCurrentPriorityLevel();
 	const lane = schedulerPriorityToLane(schedulerPriority);
 	return lane;

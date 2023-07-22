@@ -10,6 +10,10 @@ import {
 import type { ReactElementType } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 import { requestUpdateLane } from './fiberLane';
+import {
+	unstable_runWithPriority,
+	unstable_ImmediatePriority
+} from 'scheduler';
 
 export function createContainer(container: Container) {
 	const hostRootFiber = new FiberNode(HostRoot, {}, null);
@@ -22,10 +26,12 @@ export function updateContainer(
 	element: ReactElementType,
 	root: FiberRootNode
 ) {
-	const lane = requestUpdateLane();
-	const current = root.current;
-	const update = createUpdate<ReactElementType>(element, lane);
-	enqueueUpdate(current.updateQueue as UpdateQueue<ReactElementType>, update);
-	scheduleUpdateOnFiber(current, lane);
+	unstable_runWithPriority(unstable_ImmediatePriority, () => {
+		const lane = requestUpdateLane();
+		const current = root.current;
+		const update = createUpdate<ReactElementType>(element, lane);
+		enqueueUpdate(current.updateQueue as UpdateQueue<ReactElementType>, update);
+		scheduleUpdateOnFiber(current, lane);
+	});
 	return element;
 }
