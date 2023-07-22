@@ -18,9 +18,11 @@ import { HookHasEffect, Passive } from './hookEffectTags';
 const { currentDispatcher } = internals;
 
 interface Hook {
-	memmoizedState: any;
+	memoizedState: any;
 	updateQueue: UpdateQueue<any> | null;
 	next: Hook | null;
+	baseState: any;
+	baseQueue: Update<any> | null;
 }
 
 export interface Effect {
@@ -84,7 +86,7 @@ function mountState<T>(initialState: T | (() => T)): [T, Dispatch<T>] {
 	} else {
 		memoizedState = initialState;
 	}
-	hook.memmoizedState = memoizedState;
+	hook.memoizedState = memoizedState;
 	const queue = createUpdateQueue();
 	hook.updateQueue = queue;
 
@@ -108,9 +110,11 @@ function dispatchSetState<T>(
 
 function mountWorkInProgressHook() {
 	const hook: Hook = {
-		memmoizedState: null,
+		memoizedState: null,
 		updateQueue: null,
-		next: null
+		next: null,
+		baseState: null,
+		baseQueue: null
 	};
 
 	if (workInProgressHook === null) {
@@ -134,18 +138,36 @@ function updateState<T>(): [T, Dispatch<T>] {
 	const queue = hook.updateQueue as UpdateQueue<T>;
 	const dispatch = queue.dispatch as Dispatch<T>;
 	const pedding = queue.shared.pedding as Update<T>;
-	queue.shared.pedding = null;
+
+	const baseState = hook.baseState;
+	const current = currentHook as Hook;
+	let baseQueue = current.baseQueue;
 
 	if (pedding !== null) {
-		const { memoizedState } = processUpdateQueue(
-			hook.memmoizedState,
-			pedding,
-			renderLane
-		);
-		hook.memmoizedState = memoizedState;
+		// 合并update链表
+		if (baseQueue !== null) {
+			const baseQueueFirst = baseQueue.next;
+			const peddingQueueFirst = pedding.next;
+
+			baseQueue.next = peddingQueueFirst;
+			pedding.next = baseQueueFirst;
+		}
+		current.baseQueue = pedding;
+		baseQueue = pedding;
 	}
 
-	return [hook.memmoizedState, dispatch];
+	if (baseQueue !== null) {
+		const {
+			memoizedState,
+			baseQueue: newBaseQueue,
+			baseState: newBaseState
+		} = processUpdateQueue(baseState, baseQueue, renderLane);
+		hook.memoizedState = memoizedState;
+		hook.baseState = newBaseState;
+		hook.baseQueue = newBaseQueue;
+	}
+
+	return [hook.memoizedState, dispatch];
 }
 
 function updateWorkInProgressHook() {
@@ -168,9 +190,11 @@ function updateWorkInProgressHook() {
 
 	currentHook = nextCurrentHook;
 	const hook: Hook = {
-		memmoizedState: currentHook.memmoizedState,
+		memoizedState: currentHook.memoizedState,
 		updateQueue: currentHook.updateQueue,
-		next: null
+		next: null,
+		baseState: currentHook.baseState,
+		baseQueue: currentHook.baseQueue
 	};
 
 	if (workInProgressHook === null) {
@@ -193,7 +217,7 @@ function mountEffect(create: EffectCallback, deps: EffectDeps) {
 	const nextDeps = typeof deps === 'undefined' ? null : deps;
 	(currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
 
-	hook.memmoizedState = pushEffect(
+	hook.memoizedState = pushEffect(
 		Passive | HookHasEffect,
 		create,
 		undefined,
@@ -207,20 +231,20 @@ function updateEffect(create: EffectCallback, deps: EffectDeps) {
 	let destroy: EffectCallback | void;
 
 	if (currentHook !== null) {
-		const prevEffect = hook.memmoizedState as Effect;
+		const prevEffect = hook.memoizedState as Effect;
 		destroy = prevEffect.destroy;
 
 		if (nextDeps !== null) {
 			const prevDeps = prevEffect.deps;
 
 			if (areHookInputsEquals(nextDeps, prevDeps)) {
-				hook.memmoizedState = pushEffect(Passive, create, destroy, nextDeps);
+				hook.memoizedState = pushEffect(Passive, create, destroy, nextDeps);
 				return;
 			}
 		}
 
 		(currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
-		hook.memmoizedState = pushEffect(
+		hook.memoizedState = pushEffect(
 			Passive | HookHasEffect,
 			create,
 			destroy,

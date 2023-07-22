@@ -18,7 +18,7 @@ import {
 	Lane,
 	NoLane,
 	SyncLane,
-	getHightestPriorityLane,
+	getHighestPriorityLane,
 	lanesToSchedulerPriority,
 	markRootFinished,
 	mergeLanes
@@ -75,7 +75,7 @@ function markUpdateFormFiberToRoot(fiber: FiberNode) {
 
 function ensureRootIsScheduled(root: FiberRootNode) {
 	const currCallbackNode = root.callbackNode;
-	const updateLane = getHightestPriorityLane(root.peddingLanes);
+	const updateLane = getHighestPriorityLane(root.peddingLanes);
 
 	if (updateLane === NoLane) {
 		if (currCallbackNode) {
@@ -120,7 +120,10 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	root.callbackPriority = currPriority;
 }
 
-function performConcurrentWorkOnRoot(root: FiberRootNode, didTimeout: boolean) {
+function performConcurrentWorkOnRoot(
+	root: FiberRootNode,
+	didTimeout: boolean
+): any {
 	const currCallback = root.callbackNode;
 
 	// 确定所有的effect执行完毕，因为在effect中可能会触发更高优先级的update
@@ -131,14 +134,14 @@ function performConcurrentWorkOnRoot(root: FiberRootNode, didTimeout: boolean) {
 		}
 	}
 
-	const lane = getHightestPriorityLane(root.peddingLanes);
+	const lane = getHighestPriorityLane(root.peddingLanes);
 
 	if (lane === NoLane) {
 		return null;
 	}
 
-	const needSync = lane === SyncLane || !didTimeout;
-	const exsitingStatus = renderRoot(root, needSync);
+	const needSync = lane === SyncLane || didTimeout;
+	const exsitingStatus = renderRoot(root, !needSync);
 
 	ensureRootIsScheduled(root);
 
@@ -146,8 +149,9 @@ function performConcurrentWorkOnRoot(root: FiberRootNode, didTimeout: boolean) {
 		if (root.callbackNode !== currCallback) {
 			return null;
 		}
-		return performSyncWorkOnRoot.bind(null, root);
+		return performConcurrentWorkOnRoot.bind(null, root);
 	}
+
 	if (exsitingStatus === RootCompleted) {
 		const finishedWord = root.current.alternate;
 		root.finishedWork = finishedWord;
@@ -163,7 +167,7 @@ function performConcurrentWorkOnRoot(root: FiberRootNode, didTimeout: boolean) {
 }
 
 export function performSyncWorkOnRoot(root: FiberRootNode) {
-	const nextLane = getHightestPriorityLane(root.peddingLanes);
+	const nextLane = getHighestPriorityLane(root.peddingLanes);
 	if (nextLane !== SyncLane) {
 		ensureRootIsScheduled(root);
 		return;
@@ -186,7 +190,7 @@ export function performSyncWorkOnRoot(root: FiberRootNode) {
 }
 
 function renderRoot(root: FiberRootNode, shouldTimeslice: boolean) {
-	const lane = getHightestPriorityLane(root.peddingLanes);
+	const lane = getHighestPriorityLane(root.peddingLanes);
 
 	if (workInProgressRootRenderLane !== lane) {
 		prepareFreshStack(root, lane);

@@ -27,7 +27,11 @@ export function requestUpdateLane(): Lane {
 	return lane;
 }
 
-export function getHightestPriorityLane(lanes: Lanes): Lane {
+export function isSubsetOfLanes(set: Lanes, subset: Lane): boolean {
+	return (set & subset) === subset;
+}
+
+export function getHighestPriorityLane(lanes: Lanes): Lane {
 	return lanes & -lanes;
 }
 
@@ -36,7 +40,7 @@ export function markRootFinished(root: FiberRootNode, lane: Lane) {
 }
 
 export function lanesToSchedulerPriority(lanes: Lane): number {
-	const lane = getHightestPriorityLane(lanes);
+	const lane = getHighestPriorityLane(lanes);
 
 	if (lane === SyncLane) {
 		return unstable_ImmediatePriority;
