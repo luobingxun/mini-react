@@ -9,7 +9,7 @@ import internals from 'shared/internals';
 import { scheduleUpdateOnFiber } from './workLoop';
 import type { Dispatch, Dispatcher } from 'react/src/currentDispatcher';
 import type { Update, UpdateQueue } from './updateQueue';
-import type { Action } from 'shared/ReactTypes';
+import type { Action, Ref } from 'shared/ReactTypes';
 import { type Lane, NoLane, requestUpdateLane } from './fiberLane';
 import { Flags, PassiveEffect } from './fiberFlags';
 
@@ -71,13 +71,15 @@ export function renderWithHooks(workInProgress: FiberNode, lane: Lane) {
 const HooksDispatcherOnMount: Dispatcher = {
 	useState: mountState,
 	useEffect: mountEffect,
-	useTransition: mountTransition
+	useTransition: mountTransition,
+	useRef: mountRef
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
 	useEffect: updateEffect,
-	useTransition: updateTransition
+	useTransition: updateTransition,
+	useRef: updateRef
 };
 
 function mountState<T>(initialState: T | (() => T)): [T, Dispatch<T>] {
@@ -338,4 +340,17 @@ function startTransition(setPedding: Dispatch<boolean>, callback: () => void) {
 	setPedding(false);
 
 	reactCurrentBatchConfig.transition = prevTransition;
+}
+
+function mountRef<T>(initialState: T): Ref<T> {
+	const hook = mountWorkInProgressHook();
+	const ref: Ref<T> = { current: initialState };
+	hook.memoizedState = ref;
+	return ref;
+}
+
+function updateRef<T>(): Ref<T> {
+	const hook = updateWorkInProgressHook();
+	const ref = hook.memoizedState;
+	return ref;
 }

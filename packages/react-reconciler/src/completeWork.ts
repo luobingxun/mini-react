@@ -12,11 +12,14 @@ import {
 	HostText,
 	Fragment
 } from './workTags';
-import { Flags, NoFlags, Update } from './fiberFlags';
+import { Flags, NoFlags, Ref, Update } from './fiberFlags';
 import { updateFiberProps } from 'react-dom/src/sytheticEvent';
 
 function markUpdate(fiber: FiberNode) {
 	fiber.flags |= Update;
+}
+function markRef(fiber: FiberNode) {
+	fiber.flags |= Ref;
 }
 
 export function completeWork(workInProgress: FiberNode) {
@@ -26,12 +29,18 @@ export function completeWork(workInProgress: FiberNode) {
 		case HostComponent:
 			if (current !== null && workInProgress.stateNode) {
 				// update
+				if (current.ref !== workInProgress.ref) {
+					markRef(workInProgress);
+				}
 				updateFiberProps(workInProgress.stateNode, newProps);
 			} else {
 				// mount
 				const instance = createInstance(workInProgress.type, newProps);
 				appendAllChildren(instance, workInProgress);
 				workInProgress.stateNode = instance;
+				if (workInProgress.ref === null) {
+					markRef(workInProgress);
+				}
 			}
 			bubbleProperties(workInProgress);
 			return null;

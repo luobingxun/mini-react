@@ -33,7 +33,7 @@ export class FiberNode {
 	memoizedProps: Props;
 	peddingProps: Props;
 	memoizedState: Props;
-	ref: Ref;
+	ref: Ref | null;
 
 	alternate: FiberNode | null;
 	flags: Flags;
@@ -127,12 +127,13 @@ export function createWorkInProgress(current: FiberNode, peddingProps: Props) {
 	workInProgress.updateQueue = current.updateQueue;
 	workInProgress.memoizedProps = current.memoizedProps;
 	workInProgress.memoizedState = current.memoizedState;
+	workInProgress.ref = current.ref;
 
 	return workInProgress;
 }
 
 export function createFiberFromElement(element: ReactElementType) {
-	const { type, key, props } = element;
+	const { type, key, props, ref } = element;
 	let fiberTag: WorkTags = FunctionComponent;
 
 	if (typeof type === 'string') {
@@ -146,6 +147,7 @@ export function createFiberFromElement(element: ReactElementType) {
 	const fiber = new FiberNode(fiberTag, props, key);
 
 	fiber.type = type;
+	fiber.ref = ref;
 
 	return fiber;
 }
